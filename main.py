@@ -3,17 +3,17 @@ import pygame
 food_health = 30
 wound_health = 20
 cell_size = 10
-length = 60
-height = 50
+length = 30
+height = 20
 win_length = length * cell_size + 200
 win_height = height * cell_size + 200
 
 
 class Bot:
     """creating of bot for simulation"""
-    def __init__(self, number, npos):
+    def __init__(self, npos):
         """initiating of bot"""
-        self.number = number
+        self.number = len(bots)+1
         self.health = 100
         self.dna = 'abcbcba'
         self.pos = npos
@@ -105,8 +105,18 @@ field = Field(length, height)
 field.draw_field()
 pos = [0, 0]
 
-bot1 = Bot(1, pos)
-bot2 = Bot(2, [1, 3])
+bots = []
+
+bots.append(Bot(pos))
+bots.append(Bot([1, 3]))
+
+
+def field_click(pos):
+    fieldpos = [int(pos[0] / cell_size)-1, int(pos[1] / cell_size)-1]
+    if fieldmap[fieldpos[1]][fieldpos[0]] >= 1:
+        numb_of_bot = fieldmap[fieldpos[1]][fieldpos[0]]-1
+        bots[numb_of_bot].info()
+
 
 while True:
     field.show_field()
@@ -115,7 +125,9 @@ while True:
             exit()
         elif i.type == pygame.KEYDOWN:
             if i.key == pygame.K_SPACE:
-                bot1.move()
+                bots[0].move()
             elif i.key == pygame.K_RETURN:
-                bot2.move()
+                bots[1].move()
             field.show_field()
+        elif i.type == pygame.MOUSEBUTTONDOWN:
+            field_click(pygame.mouse.get_pos())
