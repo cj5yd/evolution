@@ -89,6 +89,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.idea/
 
 # Spyder project settings
 .spyderproject
@@ -133,4 +134,3 @@ $RECYCLE.BIN/
 
 # End of https://www.gitignore.io/api/windows
 
-.idea/workspace.xml
