@@ -1,15 +1,21 @@
 import pygame
-
+import random
 
 food_health = 30
 wound_health = 20
 cell_size = 10
-length = 15
-height = 10
+length = 40
+height = 30
 win_length = length * cell_size + 200
 win_height = height * cell_size + 200
+food_quantity = 40
+poison_quantity = 20
+bots_quantity = 20
+walls_quantity = 20
 
-convert_pos = {
+# значения для конвертации позиции относительно бота в абсолютные и обратно
+# Для бота, номер строки которого делится на 2 без остатка (нумерация строк начинается с 0)
+convert_pos1 = {
     0: [-1, 0],
     1: [-1, 1],
     2: [0, 1],
@@ -28,6 +34,27 @@ convert_pos = {
     15: [1, -1],
     16: [0, -2],
     17: [-1, -1]}
+# Для бота, номер строки которого делится на 2 с остатком (нумерация строк начинается с 0)
+convert_pos2 = {
+    0: [-1, -1],
+    1: [-1, 0],
+    2: [0, 1],
+    3: [1, 0],
+    4: [1, -1],
+    5: [0, -1],
+    6: [-2, -1],
+    7: [-2, 0],
+    8: [-2, 1],
+    9: [-1, 1],
+    10: [0, 2],
+    11: [1, 1],
+    12: [2, 1],
+    13: [2, 0],
+    14: [2, -1],
+    15: [1, -2],
+    16: [0, -2],
+    17: [-1, -2]
+    }
 
 
 class Bot:
@@ -37,22 +64,36 @@ class Bot:
         self.number = len(bots)+1
         self.health = 100
         self.pos = npos
-        self.counter = 0
         self.view = [0 for i in range(18)]
         fieldmap[self.pos[0]][self.pos[1]] = self.number
+        self.dna = {
+            # 1 - любой другой бот
+            1: [random.random() for i in range(12)],
+            0: [random.random() for i in range(12)],
+            -1: [random.random() for i in range(12)],
+            -2: [random.random() for i in range(12)],
+            -3: [random.random() for i in range(12)]}
 
-    """
-    def abs_pos(self, position):
-        abs_pos = convert_pos[position]
-        if self.pos[0] % 2 != 0:
-            if abs_pos[0] % 2 == 0:
-                abs_pos[1] -= 1
+    def rel_to_abs_pos(self, rel_pos):
+        if self.pos[0] % 2 == 0:
+            abs_pos = [self.pos[0] + convert_pos1[rel_pos][0], self.pos[1] + convert_pos1[rel_pos][1]]
+        else:
+            abs_pos = [self.pos[0] + convert_pos2[rel_pos][0], self.pos[1] + convert_pos2[rel_pos][1]]
         return abs_pos
-    """
+
+    def abs_to_rel_pos(self, abs_pos):
+        if self.pos[0] % 2 == 0:
+            for key in convert_pos1:
+                if convert_pos1[key] == abs_pos:
+                    return key
+        else:
+            for key in convert_pos2:
+                if convert_pos2[key] == abs_pos:
+                    return key
 
     def move(self):
         aim = 4
-        new_pos = [self.pos[0] + convert_pos[aim][0], self.pos[1] + convert_pos[aim][1]]
+        new_pos = self.rel_to_abs_pos(aim)
         if fieldmap[new_pos[0]][new_pos[1]] != 0:
             print('The place is not empty')
             return
@@ -62,11 +103,13 @@ class Bot:
 
     def scan(self):
         for i in range(18):
-            self.view[i] = fieldmap[self.pos[0] + convert_pos[i][0]][self.pos[1] + convert_pos[i][1]]
-        print(self.view)
+            self.view[i] = fieldmap[self.rel_to_abs_pos(i)[0]][self.rel_to_abs_pos(i)[1]]
+        for i in range(len(self.view)):
+            if self.view[i] != 0:
+                print(str(self.view[i]) + ' ' + str(i))
 
     def info(self):
-        print('Bot №' + str(self.number) + ', health = ' + str(self.health) + '\n'  + 'Counter = ' + str(self.counter)
+        print('Bot №' + str(self.number) + ', health = ' + str(self.health) + '\n'
               + '\n' + 'Position = ' + str(self.pos) + '\n')
 
 
@@ -155,12 +198,36 @@ def create_fieldmap():
 
 fieldmap = create_fieldmap()
 field = Field()
-pos = [4, 5]
-
 bots = []
 
-bots.append(Bot(pos))
-bots.append(Bot([7, 8]))
+# Создаем объекты на поле
+# Создаем рандомные стены
+for i in range(walls_quantity):
+    pos = [random.randint(0, height) + 2, random.randint(0, length) + 2]
+    while fieldmap[pos[0]][pos[1]] != 0:
+        pos = [random.randint(0, height) + 2, random.randint(0, length) + 2]
+    fieldmap[pos[0]][pos[1]] = -1
+
+# Создаем еду
+for i in range(food_quantity):
+    pos = [random.randint(0, height) + 2, random.randint(0, length) + 2]
+    while fieldmap[pos[0]][pos[1]] != 0:
+        pos = [random.randint(0, height) + 2, random.randint(0, length) + 2]
+    fieldmap[pos[0]][pos[1]] = -2
+
+# Создаем яд
+for i in range(poison_quantity):
+    pos = [random.randint(0, height) + 2, random.randint(0, length) + 2]
+    while fieldmap[pos[0]][pos[1]] != 0:
+        pos = [random.randint(0, height) + 2, random.randint(0, length) + 2]
+    fieldmap[pos[0]][pos[1]] = -3
+
+# Создаем ботов
+for i in range(bots_quantity):
+    pos = [random.randint(0, height) + 2, random.randint(0, length) + 2]
+    while fieldmap[pos[0]][pos[1]] != 0:
+        pos = [random.randint(0, height) + 2, random.randint(0, length) + 2]
+    bots.append(Bot(pos))
 
 
 def field_click(click_pos):
